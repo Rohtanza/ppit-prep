@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Issues in Computing - Study Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f7;--surface:#fff;--surface2:#f0f0f2;--text:#1d1d1f;--text2:#6e6e73;
+  --accent:#0071e3;--accent2:#0077ed;--green:#34c759;--red:#ff3b30;--orange:#ff9500;
+  --border:#d2d2d7;--shadow:0 1px 3px rgba(0,0,0,.08);--radius:12px;
+  --card-bg:#fff;--card-border:#e5e5ea;
+}
+[data-theme="dark"]{
+  --bg:#1c1c1e;--surface:#2c2c2e;--surface2:#3a3a3c;--text:#f5f5f7;--text2:#98989d;
+  --accent:#0a84ff;--accent2:#409cff;--border:#48484a;--shadow:0 1px 3px rgba(0,0,0,.3);
+  --card-bg:#2c2c2e;--card-border:#48484a;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s;
+  min-height:100vh}
+a{color:var(--accent)}
+
+/* Header */
+.header{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:12px 20px;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);
+  background:rgba(255,255,255,.85)}
+[data-theme="dark"] .header{background:rgba(28,28,30,.85)}
+.header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.header h1{font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+.header-controls{display:flex;align-items:center;gap:10px}
+
+/* Theme toggle */
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  padding:6px 14px;cursor:pointer;font-size:.85rem;color:var(--text);display:flex;align-items:center;gap:6px;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:99;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-btn{flex:1;padding:12px 8px;text-align:center;font-size:.82rem;font-weight:600;
+  background:none;border:none;color:var(--text2);cursor:pointer;
+  border-bottom:2.5px solid transparent;transition:all .2s;white-space:nowrap;min-width:0}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover{color:var(--text)}
+
+/* Main content */
+.main{max-width:900px;margin:0 auto;padding:16px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Score tracker */
+.score-bar{background:var(--surface);border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.score-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.stat{font-size:.85rem;font-weight:600}
+.stat .num{font-size:1.3rem;display:block}
+.stat.correct .num{color:var(--green)}
+.stat.incorrect .num{color:var(--red)}
+.stat.remaining .num{color:var(--orange)}
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .4s;border-radius:3px}
+.mcq-controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mcq-controls button{padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.mcq-controls button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* MCQ Cards */
+.mcq-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:20px;margin-bottom:12px;box-shadow:var(--shadow);transition:all .2s}
+.mcq-card.answered-correct{border-left:4px solid var(--green)}
+.mcq-card.answered-incorrect{border-left:4px solid var(--red)}
+.mcq-num{font-size:.75rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.mcq-question{font-size:.95rem;font-weight:600;margin-bottom:14px;line-height:1.5}
+.mcq-options{display:flex;flex-direction:column;gap:8px}
+.mcq-option{padding:10px 14px;border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;font-size:.88rem;transition:all .15s;background:var(--surface)}
+.mcq-option:hover:not(.disabled){background:var(--surface2);border-color:var(--accent)}
+.mcq-option.selected-correct{background:#d1f5d3;border-color:var(--green);color:#1b5e20}
+[data-theme="dark"] .mcq-option.selected-correct{background:#1b3a1b;color:#81c784}
+.mcq-option.selected-incorrect{background:#fdd;border-color:var(--red);color:#b71c1c}
+[data-theme="dark"] .mcq-option.selected-incorrect{background:#3a1b1b;color:#e57373}
+.mcq-option.show-correct{background:#d1f5d3;border-color:var(--green)}
+[data-theme="dark"] .mcq-option.show-correct{background:#1b3a1b}
+.mcq-option.disabled{cursor:default;opacity:.8}
+
+/* Case Studies */
+.case-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.case-title{font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--accent)}
+.case-scenario{font-size:.9rem;line-height:1.65;margin-bottom:16px;color:var(--text);padding:12px;background:var(--surface2);border-radius:8px}
+.case-qa{margin-bottom:10px}
+
+/* Collapsibles */
+.collapsible{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.collapsible-header{padding:12px 14px;cursor:pointer;font-weight:600;font-size:.88rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);transition:background .2s;user-select:none}
+.collapsible-header:hover{background:var(--surface2)}
+.collapsible-header::after{content:'+';font-size:1.1rem;font-weight:700;color:var(--accent);transition:transform .2s}
+.collapsible.open .collapsible-header::after{content:'\2212'}
+.collapsible-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.collapsible.open .collapsible-body{max-height:3000px}
+.collapsible-content{padding:12px 14px;font-size:.88rem;line-height:1.65;color:var(--text);border-top:1px solid var(--border)}
+.collapsible-content ul{margin-left:18px;margin-top:6px}
+.collapsible-content li{margin-bottom:4px}
+
+/* Glossary */
+.glossary-search{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;
+  font-size:.9rem;background:var(--surface);color:var(--text);margin-bottom:12px;transition:border .2s}
+.glossary-search:focus{outline:none;border-color:var(--accent)}
+.glossary-table{width:100%;border-collapse:collapse}
+.glossary-table th{text-align:left;padding:10px 12px;font-size:.8rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--text2);
+  border-bottom:2px solid var(--border);background:var(--surface2)}
+.glossary-table td{padding:10px 12px;font-size:.87rem;border-bottom:1px solid var(--border);vertical-align:top}
+.glossary-table tr:hover td{background:var(--surface2)}
+.glossary-table .term{font-weight:600;white-space:nowrap;min-width:120px}
+.glossary-hidden{display:none}
+
+/* Essay comparison table */
+.essay-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.82rem}
+.essay-table th,.essay-table td{padding:8px 10px;border:1px solid var(--border);text-align:left;vertical-align:top}
+.essay-table th{background:var(--surface2);font-weight:700;font-size:.78rem;text-transform:uppercase}
+
+/* Section headings */
+.section-heading{font-size:1.15rem;font-weight:700;margin:24px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+.section-subheading{font-size:.95rem;font-weight:700;margin:16px 0 8px;color:var(--accent)}
+
+/* Responsive */
+@media(max-width:600px){
+  .header h1{font-size:.95rem}
+  .tab-btn{font-size:.75rem;padding:10px 6px}
+  .tabs{top:48px}
+  .main{padding:12px}
+  .mcq-card,.case-card{padding:14px}
+  .score-stats{gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>Professional Issues in Computing</h1>
+    <div class="header-controls">
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span id="theme-icon">&#9790;</span> <span id="theme-label">Dark</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab-btn active" data-tab="mcqs" role="tab">MCQ Bank</button>
+  <button class="tab-btn" data-tab="cases" role="tab">Case Studies</button>
+  <button class="tab-btn" data-tab="essays" role="tab">Long Answers &amp; Glossary</button>
+</div>
+
+<div class="main">
+
+<!-- ==================== MCQ TAB ==================== -->
+<div id="mcqs" class="tab-content active">
+  <div class="score-bar">
+    <div class="score-stats">
+      <div class="stat correct"><span class="num" id="score-correct">0</span>Correct</div>
+      <div class="stat incorrect"><span class="num" id="score-incorrect">0</span>Incorrect</div>
+      <div class="stat remaining"><span class="num" id="score-remaining">50</span>Remaining</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="mcq-controls">
+      <button onclick="shuffleMCQs()">&#8645; Shuffle</button>
+      <button onclick="resetMCQs()">&#8634; Reset All</button>
+    </div>
+  </div>
+  <div id="mcq-container"></div>
+</div>
+
+<!-- ==================== CASE STUDIES TAB ==================== -->
+<div id="cases" class="tab-content">
+
+<!-- Case Study 1 -->
+<div class="case-card">
+<div class="case-title">Case Study 1: The Zero-Dollar Clerical Error</div>
+<div class="case-scenario">Kyren (Company A) emails David (Tech One) a contract for support. Due to a clerical error, the hourly rate is listed as $000.00. David, sensing a promotion, signs and returns it. Company A never signs the document back. David spends his budget on new computers. When a technician later performs 2 hours of work, Company A sends an invoice for $200 and a &ldquo;corrected&rdquo; contract. David refuses to pay.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Is there an enforceable contract?</div>
+<div class="collapsible-body"><div class="collapsible-content">Likely not. A contract requires mutual intention and typically signatures from both parties to signify acceptance of terms. Furthermore, a rate of $000.00 may be viewed as lacking &ldquo;Consideration&rdquo; (each party must provide something of value).</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. Does David have a defense based on his expenditure?</div>
+<div class="collapsible-body"><div class="collapsible-content">He might attempt a claim based on reliance, but since Company A never signed the contract, his assumption of a &ldquo;special promotion&rdquo; without verification is risky.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. What should Company A have done?</div>
+<div class="collapsible-body"><div class="collapsible-content">Under slide guidelines, they must ensure the final version is read clearly and signed by both parties before work begins.</div></div>
+</div>
+</div>
+
+<!-- Case Study 2 -->
+<div class="case-card">
+<div class="case-title">Case Study 2: The &ldquo;Hit by a Bus&rdquo; Clause (Copyright)</div>
+<div class="case-scenario">A developer uses a large, proprietary shared-code base to build a small app for a client. The client suddenly demands the source code in the contract, fearing the developer might go out of business (&ldquo;hit by a bus&rdquo;).</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Should the developer hand over the code?</div>
+<div class="collapsible-body"><div class="collapsible-content">No. Source code has value separate from the binary. Handing over a code base used for other products is a major IP risk.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. What is a professional alternative?</div>
+<div class="collapsible-body"><div class="collapsible-content">Use a Software Code Escrow Service. This service holds the source code and only releases it to the client if the developer goes bankrupt or fails to maintain the software.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. What legal principle applies to the code base ownership?</div>
+<div class="collapsible-body"><div class="collapsible-content">Copyright. As the author, the developer is the first owner. Unless the contract specifies &ldquo;work for hire,&rdquo; the developer retains rights to their pre-existing libraries.</div></div>
+</div>
+</div>
+
+<!-- Case Study 3 -->
+<div class="case-card">
+<div class="case-title">Case Study 3: The Library Scan (Fair Use Analysis)</div>
+<div class="case-scenario">A professor scans entire journal articles and posts them on a password-protected site because students complained the library copies were always checked out.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Is this Fair Use?</div>
+<div class="collapsible-body"><div class="collapsible-content">Likely not. While the purpose is educational (nonprofit), the amount (entire articles) and the effect on the potential market (replacing the need for the library to buy more licenses or students to buy copies) weigh against fair use.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. How could the professor make this legal?</div>
+<div class="collapsible-body"><div class="collapsible-content">Use excerpts rather than whole works, or obtain an open license/permission from the publisher.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. Is the password protection a valid defense?</div>
+<div class="collapsible-body"><div class="collapsible-content">It limits the &ldquo;Issue to the public&rdquo; infringement, but the &ldquo;Reproduction&rdquo; right of the copyright holder is still violated by the act of scanning and hosting.</div></div>
+</div>
+</div>
+
+<!-- Case Study 4 -->
+<div class="case-card">
+<div class="case-title">Case Study 4: Cyber Squatting vs. Trademark</div>
+<div class="case-scenario">An entrepreneur registers &ldquo;FastDelivery-Service.com&rdquo; before a famous company named &ldquo;Fast Delivery&rdquo; expands to the web. The entrepreneur offers to sell it to them for $50,000.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. What is this practice called?</div>
+<div class="collapsible-body"><div class="collapsible-content">Cyber Squatting.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. Which organization handles this dispute?</div>
+<div class="collapsible-body"><div class="collapsible-content">ICANN, through the Uniform Domain Name Dispute Resolution Policy (UNDRP).</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. Why do trademarks and domain names conflict?</div>
+<div class="collapsible-body"><div class="collapsible-content">Trademarks are territorial and divided into classes (e.g., two companies can have the same name if one sells fruit and the other sells software). Domain names are unique, global, and &ldquo;first come, first served.&rdquo;</div></div>
+</div>
+</div>
+
+<!-- Case Study 5 -->
+<div class="case-card">
+<div class="case-title">Case Study 5: The Secret Nanny Cam (Privacy)</div>
+<div class="case-scenario">The Sullivans install a laptop camera to monitor their nanny without informing her.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Is this ethically/legally sound?</div>
+<div class="collapsible-body"><div class="collapsible-content">No. Secret monitoring is an affront to human dignity. Privacy is a &ldquo;zone of inaccessibility.&rdquo;</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. What are the &ldquo;Morally Acceptable Options&rdquo;?</div>
+<div class="collapsible-body"><div class="collapsible-content">Conduct more comprehensive interviews, check references, observe from a distance in person, or be up-front about installing surveillance.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. How does the &ldquo;Right to be Let Alone&rdquo; apply?</div>
+<div class="collapsible-body"><div class="collapsible-content">Based on Warren and Brandeis, individuals have a prudential right to privacy, especially in what they consider a secure working environment.</div></div>
+</div>
+</div>
+
+<!-- Case Study 6 -->
+<div class="case-card">
+<div class="case-title">Case Study 6: Secondary Use of Medical Data</div>
+<div class="case-scenario">A hospital sells anonymized patient recovery data to a pharmaceutical company for research. Later, the company uses the data to identify and market drugs directly to those patients.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. What principle of data protection is violated?</div>
+<div class="collapsible-body"><div class="collapsible-content">Secondary use. Data should only be used for the purpose for which it was collected.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. What is the &ldquo;Opt-in&rdquo; vs &ldquo;Opt-out&rdquo; implication?</div>
+<div class="collapsible-body"><div class="collapsible-content">If the hospital used an &ldquo;Opt-out&rdquo; policy, they might claim legality, but ethical data protection suggests explicit &ldquo;Opt-in&rdquo; for sensitive medical data.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. What happened in the Netflix Prize case that is relevant here?</div>
+<div class="collapsible-body"><div class="collapsible-content">Researchers proved that &ldquo;anonymized&rdquo; data can often be de-anonymized if other external data is available.</div></div>
+</div>
+</div>
+
+<!-- Case Study 7 -->
+<div class="case-card">
+<div class="case-title">Case Study 7: Bespoke System Failure (The Faujisoft Scenario)</div>
+<div class="case-scenario">A company builds a custom MIS for a client. No formal requirements were written. The supplier wrote the contract, which the client signed without legal review. The software is delivered but is full of bugs and doesn&rsquo;t meet needs.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Can the client claim damages?</div>
+<div class="collapsible-body"><div class="collapsible-content">In the Faujisoft example, the client could not claim anything because the supplier-friendly contract didn&rsquo;t specify performance standards.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. What should the &ldquo;Acceptance Procedure&rdquo; have included?</div>
+<div class="collapsible-body"><div class="collapsible-content">Criteria for judgment of successful completion and specific &ldquo;Schedules/Annexes&rdquo; of what was to be supplied.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. What is the difference between Warranty and Maintenance here?</div>
+<div class="collapsible-body"><div class="collapsible-content">A warranty would have forced the supplier to fix the bugs for free. Maintenance would allow the client to request changes at a cost.</div></div>
+</div>
+</div>
+
+<!-- Case Study 8 -->
+<div class="case-card">
+<div class="case-title">Case Study 8: Whistleblowing and Confidentiality</div>
+<div class="case-scenario">An IT consultant discovers their client is illegally dumping chemicals into a local river. The consultant signed an NDA.</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. Can the consultant report this?</div>
+<div class="collapsible-body"><div class="collapsible-content">Yes. An obligation of confidentiality is not absolute.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. What is the legal justification?</div>
+<div class="collapsible-body"><div class="collapsible-content">Courts rule it is in the &ldquo;Public Interest&rdquo; to disclose confidential information regarding criminal offenses or environmental damage.</div></div>
+</div>
+
+<div class="collapsible">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. Does this rule out an action for breach of confidence?</div>
+<div class="collapsible-body"><div class="collapsible-content">Yes, public interest disclosure is a valid defense against a breach of confidence claim.</div></div>
+</div>
+</div>
+
+</div><!-- end cases -->
+
+<!-- ==================== LONG ANSWERS & GLOSSARY TAB ==================== -->
+<div id="essays" class="tab-content">
+
+<div class="section-heading">Long-Answer Essay Questions</div>
+
+<!-- Essay 1 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">1. The Relationship Between Law and Ethics: The Four-Quadrant Model</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Discuss the conceptual relationship between law and ethics. Explain how the four-quadrant model categorizes human actions and provide real-world examples for each quadrant as described in the source context.</p>
+<p><strong>Model Answer:</strong> Law and ethics are distinct but interconnected frameworks. Law consists of rules enforced by the state to regulate human conduct, ensure justice, and provide security. Ethics often serve as the foundation for law; for instance, the ethical principle of helping others leads to &ldquo;Good Samaritan&rdquo; laws. However, they do not always overlap perfectly. The four-quadrant model illustrates this relationship:</p>
+<ul>
+<li><strong>Quadrant I: Ethical and Legal:</strong> Actions that satisfy both moral standards and state regulations. Example: Firing an employee who fails to follow contractual obligations or meet performance expectations.</li>
+<li><strong>Quadrant II: Ethical but Not Legal:</strong> Actions that may be morally justifiable but violate specific laws. Example: Copying copyrighted software to use strictly as a backup, even when the license agreement specifically prohibits any copying.</li>
+<li><strong>Quadrant III: Unethical but Legal:</strong> Actions that are permitted by law but are considered morally wrong. Example: Failing to cite sources in a research paper or revealing data that was expected to remain confidential (but not protected by a formal contract).</li>
+<li><strong>Quadrant IV: Unethical and Not Legal:</strong> Actions that violate both moral principles and the law. Example: Planting viruses in a computer system or making unauthorized copies of copyrighted software for distribution/piracy.</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 2 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">2. Intellectual Property Protection for Software: Copyright vs. Patent</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Compare and contrast copyright and patent protection as they apply to software. Specifically, discuss the criteria for each and the status of software patentability within the Pakistani legal framework.</p>
+<p><strong>Model Answer:</strong> Copyright and patents offer different forms of protection for software:</p>
+<ul>
+<li><strong>Copyright:</strong> This protects the &ldquo;expression&rdquo; of an idea rather than the idea itself. It automatically applies to original literary works, which includes computer programs, source code, and documentation. Protection is automatic upon creation (registration is not required) and lasts for the author&rsquo;s life plus 50 years. It grants the right to reproduce, distribute, and create derivative works.</li>
+<li><strong>Patents:</strong> These protect &ldquo;inventions&rdquo; (products or processes) that are novel, useful, and non-obvious. A patent grants a 20-year monopoly to the inventor. Unlike copyright, a patent must be applied for and granted by the state.</li>
+<li><strong>Comparison and Limitations:</strong> In many jurisdictions, copyright is the primary protection for software. In Pakistan, according to the Patents Ordinance of 2000, computer programs (software) are explicitly listed as un-patentable inventions. Software developers in Pakistan must rely on Copyright (under the Copyright Ordinance 1962), Trade Secrets, or Confidential Information (Non-Disclosure Agreements) to protect their intellectual property.</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 3 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">3. The Eight Fundamental Data Protection Principles</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Identify and explain the eight principles of data protection that govern the collection and processing of personal information.</p>
+<p><strong>Model Answer:</strong> Data protection laws, such as the UK Data Protection Acts of 1984 and 1998, are built on eight core principles to protect individuals from the misuse of their personal data:</p>
+<ol>
+<li><strong>Fair and Lawful Processing:</strong> Data must be processed fairly, lawfully, and typically with the individual&rsquo;s consent.</li>
+<li><strong>Purpose Limitation:</strong> Data must be obtained for one or more specified, lawful purposes and not processed in a manner incompatible with those purposes.</li>
+<li><strong>Adequacy and Relevance:</strong> Data must be adequate, relevant, and not excessive for the purpose it serves.</li>
+<li><strong>Accuracy:</strong> Personal data must be accurate and kept up to date.</li>
+<li><strong>Storage Limitation:</strong> Data should not be kept longer than is necessary for the stated purpose.</li>
+<li><strong>Rights of Individuals:</strong> Data must be processed in accordance with the legal rights of the data subject.</li>
+<li><strong>Security (Operational Impact):</strong> Appropriate technical and organizational measures (access controls, backups, integrity checks) must be taken against unauthorized processing or accidental loss.</li>
+<li><strong>International Transfer Restrictions:</strong> Personal data should not be transferred to territories outside the original jurisdiction unless that territory ensures an adequate level of protection.</li>
+</ol>
+</div></div>
+</div>
+
+<!-- Essay 4 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">4. Privacy in the Digital Age: Tracking and Identification Technologies</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Discuss how modern technologies such as RFID tags, cookies, and facial recognition impact individual privacy. Explain the risks associated with the &ldquo;electronic trail&rdquo; left by these tools.</p>
+<p><strong>Model Answer:</strong> Technological advancements have made the collection and distribution of personal information easier, leading to the erosion of the &ldquo;zone of inaccessibility.&rdquo;</p>
+<ul>
+<li><strong>RFID Tags:</strong> These wireless transmitters are replacing barcodes. If they cannot be disabled, they become tracking devices that follow a consumer or product even after purchase.</li>
+<li><strong>Cookies and Flash Cookies:</strong> Browser cookies track visits to websites to personalize services. Flash cookies (Adobe) are more invasive, as they can hold 25 times more data and &ldquo;respawn&rdquo; deleted browser cookies, bypassing standard privacy controls.</li>
+<li><strong>Facial Recognition (Facebook Tags):</strong> This technology automatically suggests names for people in photos. Groups like EPIC have complained that this increases the risk of improper tagging and unauthorized identification.</li>
+<li><strong>Risks:</strong> These technologies create an &ldquo;electronic trail.&rdquo; Information like credit card purchases, E911 location data, and loyalty card habits are often sold or shared. This can lead to discrimination (e.g., an employer using medical/location data) or unauthorized surveillance.</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 5 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">5. Ethical Implications of Data Mining and Information Ownership</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Analyze the ethics of data mining, focusing on &ldquo;secondary use&rdquo; and the &ldquo;opt-in vs. opt-out&rdquo; debate. Provide examples of where data mining has faced public backlash.</p>
+<p><strong>Model Answer:</strong> Data mining involves analyzing large datasets to find patterns or predict preferences (Collaborative Filtering).</p>
+<ul>
+<li><strong>Secondary Use:</strong> This is an ethical concern where information collected for one purpose (e.g., search queries) is used for another (e.g., targeted advertising).</li>
+<li><strong>Ownership and Consent:</strong> The debate centers on who controls transaction information. Under Opt-in, organizations must get explicit permission to share data; under Opt-out, they can share data until the consumer forbids it. Marketing firms prefer Opt-out as it reduces barriers.</li>
+<li><strong>Public Backlash Examples:</strong>
+<ul>
+<li><strong>Lotus Marketplace:</strong> A planned CD containing data on 120 million Americans was dropped after 30,000 privacy complaints.</li>
+<li><strong>Facebook Beacon:</strong> Originally an opt-out system that shared user purchases with friends, it was forced to become opt-in after widespread criticism.</li>
+<li><strong>Netflix Prize:</strong> Netflix released 100 million &ldquo;anonymized&rdquo; movie ratings, but researchers proved individuals could be re-identified, leading to a lawsuit and the cancellation of future contests.</li>
+</ul></li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 6 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">6. Essential Components of Bespoke System Contracts</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Define &ldquo;bespoke systems&rdquo; and outline the critical terms and conditions that should be included in a fixed-price contract for their development.</p>
+<p><strong>Model Answer:</strong> Bespoke systems are tailor-made software solutions developed specifically for a client&rsquo;s unique needs. A robust contract for such systems should include:</p>
+<ul>
+<li><strong>Requirements Specification:</strong> A clear definition of what is to be produced to avoid the system not meeting user needs (as seen in the Ministry of Information v. Faujisoft case).</li>
+<li><strong>Deliverables:</strong> Explicitly listing source code, documentation, manuals, test data, and training.</li>
+<li><strong>IP Rights:</strong> Defining who owns the final software and whether any shared libraries or pre-existing code remain the property of the developer.</li>
+<li><strong>Acceptance Procedure:</strong> Determining the criteria for &ldquo;successful completion,&rdquo; who conducts the tests, and what happens if they fail.</li>
+<li><strong>Warranty and Maintenance:</strong> Defining the period for free bug removal (Warranty) versus requested changes (Maintenance).</li>
+<li><strong>Penalty Clauses:</strong> Terms for delays caused by the supplier, though these often result in higher bid prices.</li>
+<li><strong>Termination and Arbitration:</strong> Provisions for how the contract ends and how disputes are settled (often through a neutral third party rather than litigation).</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 7 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">7. Fundamental Elements of a Legally Enforceable Contract</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> According to contract law, what are the three essential elements required for a binding agreement? Explain each and discuss the role of warranties.</p>
+<p><strong>Model Answer:</strong> A contract is an agreement between two or more parties that is enforceable in court. The three essential elements are:</p>
+<ol>
+<li><strong>Offer:</strong> An expression of a present intention to create a binding agreement.</li>
+<li><strong>Acceptance:</strong> Agreement with the offer that &ldquo;mirrors&rdquo; the terms and is communicated in a reasonable manner.</li>
+<li><strong>Consideration:</strong> A legal &ldquo;detriment&rdquo; where each party receives something of value and provides something in return.</li>
+</ol>
+<p>Warranties are also vital terms:</p>
+<ul>
+<li><strong>Express Warranties:</strong> Specific promises made by the seller.</li>
+<li><strong>Implied Warranty of Merchantability:</strong> An assumption that the goods reasonably conform to an ordinary buyer&rsquo;s expectations.</li>
+<li><strong>Implied Warranty of Fitness for a Particular Purpose:</strong> Applies when a buyer relies on the seller to select goods for a specific, stated request.</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 8 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">8. Comparison of Intellectual Property Protection Types</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Use the information from the lectures to provide a comparative analysis of Copyrights, Patents, Trademarks, and Trade Secrets.</p>
+<p><strong>Model Answer:</strong></p>
+<table class="essay-table">
+<thead><tr><th>Feature</th><th>Copyright</th><th>Patent</th><th>Trademark</th><th>Trade Secret</th></tr></thead>
+<tbody>
+<tr><td>Protects</td><td>Expression of ideas (Literary, artistic, software code)</td><td>New inventions (Products or processes)</td><td>Brand identity (Names, logos, symbols)</td><td>Formulae, patterns, processes</td></tr>
+<tr><td>Criteria</td><td>Originality; fixed in a medium</td><td>Novelty, usefulness, non-obviousness</td><td>Distinctiveness; used in commerce</td><td>Must be secret and have commercial value</td></tr>
+<tr><td>Duration</td><td>Life + 50 years (Pakistan)</td><td>20 years (Pakistan)</td><td>Indefinite (Renewable every 10 years in Pak)</td><td>Indefinite as long as it remains secret</td></tr>
+<tr><td>Registration</td><td>Automatic (Optional)</td><td>Mandatory application</td><td>Mandatory for full protection</td><td>No registration; protected by NDAs</td></tr>
+<tr><td>Goal</td><td>Prevent unauthorized copying/altering</td><td>Encourage invention via monopoly</td><td>Prevent consumer confusion/unfair competition</td><td>Protect commercial advantage</td></tr>
+</tbody>
+</table>
+</div></div>
+</div>
+
+<!-- Essay 9 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">9. Freedom of Information and Its Conflict with Data Protection</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Explain the purpose of Freedom of Information (FOI) legislation and discuss why it sometimes conflicts with Data Protection laws.</p>
+<p><strong>Model Answer:</strong> The primary purpose of Freedom of Information (such as Pakistan&rsquo;s Right to Information Act 2013) is to provide the public with clear rights of access to information held by public sector bodies. It promotes transparency and accountability in government.</p>
+<p><strong>The Conflict:</strong></p>
+<ul>
+<li>Data Protection is designed to keep personal information private and prevent unauthorized access.</li>
+<li>Freedom of Information aims to make information public. Conflict arises when a requested public document contains personal data. Laws must balance the public&rsquo;s &ldquo;right to know&rdquo; against an individual&rsquo;s &ldquo;right to privacy.&rdquo; Legislation often includes enforcement mechanisms for FOI while providing specific exemptions for documents that would violate data protection if released.</li>
+</ul>
+</div></div>
+</div>
+
+<!-- Essay 10 -->
+<div class="collapsible" style="margin-bottom:12px">
+<div class="collapsible-header" onclick="toggleCollapsible(this)">10. Cyber Squatting and the UNDRP</div>
+<div class="collapsible-body"><div class="collapsible-content">
+<p><strong>Question:</strong> Define cyber squatting and explain the role of ICANN and the Uniform Domain Name Dispute Resolution Policy (UNDRP) in addressing this issue.</p>
+<p><strong>Model Answer:</strong> Cyber Squatting is the practice of registering trademarks of other companies as domain names with the intent to sell them to the trademark owner at an inflated price. This is possible because domain names are registered on a &ldquo;first come, first served&rdquo; basis across all jurisdictions, whereas trademarks are territorial and class-based.</p>
+<p>To combat this, ICANN (Internet Corporation for Assigned Names and Numbers) adopted the Uniform Domain Name Dispute Resolution Policy (UNDRP). Recommended by WIPO, the UNDRP provides a streamlined legal framework to resolve disputes where a domain name is identical or confusingly similar to a trademark, the registrant has no legitimate interest in the name, and the name was registered in bad faith (such as for cyber squatting).</p>
+</div></div>
+</div>
+
+<!-- GLOSSARY SECTION -->
+<div class="section-heading" style="margin-top:40px">Comprehensive Glossary</div>
+<input type="text" class="glossary-search" id="glossary-search" placeholder="Search glossary..." oninput="filterGlossary()">
+<div style="overflow-x:auto">
+<table class="glossary-table" id="glossary-table">
+<thead><tr><th>Term</th><th>Definition</th></tr></thead>
+<tbody>
+<tr><td class="term">Acceptance</td><td>Agreement with an offer by any manner reasonable; must mirror the offer to form a contract.</td></tr>
+<tr><td class="term">Administrative Law</td><td>Body of legal principles concerning the rights and duties arising from the functioning of the executive instruments of Government (e.g., income tax).</td></tr>
+<tr><td class="term">Agreement</td><td>Every promise or set of promises forming the consideration for each other; not necessarily bound by law.</td></tr>
+<tr><td class="term">Appellate Jurisdiction</td><td>The authority of a court to hear a case against the decision of a subordinate court.</td></tr>
+<tr><td class="term">Arbitration</td><td>A method of dispute resolution where a neutral third party makes a decision outside of court.</td></tr>
+<tr><td class="term">Bespoke System</td><td>A &ldquo;tailor-made&rdquo; or custom-developed computer system designed for a specific client.</td></tr>
+<tr><td class="term">Black Box (Automobile)</td><td>A microprocessor in a car&rsquo;s airbag that maintains 5 seconds of data (speed, brake pressure, seat belt status) before an accident.</td></tr>
+<tr><td class="term">Civil Law (Private Law)</td><td>Law concerned with the rights and duties of individuals toward each other; purpose is to provide rules for settling disputes.</td></tr>
+<tr><td class="term">Collaborative Filtering</td><td>A data mining method that analyzes preferences of a large group to predict what one individual may prefer.</td></tr>
+<tr><td class="term">Common Law</td><td>Traditional law not written down, depending on previous judgments or precedents.</td></tr>
+<tr><td class="term">Computer Fraud and Abuse Act</td><td>A U.S. law (18 U.S.C. &sect; 1030) cited in eBay v. Bidder&rsquo;s Edge regarding unauthorized access.</td></tr>
+<tr><td class="term">Confidential Information</td><td>Information received under an &ldquo;obligation of confidence,&rdquo; often secured by a Non-Disclosure Agreement (NDA).</td></tr>
+<tr><td class="term">Consideration</td><td>The legal &ldquo;detriment&rdquo; or value exchanged by both sides that serves as the reason for a contract.</td></tr>
+<tr><td class="term">Constitutional Law</td><td>Rules regulating the structure of the principal organs of government and their relationship to each other.</td></tr>
+<tr><td class="term">Contract</td><td>An agreement between two or more parties that can be enforced in a court of law.</td></tr>
+<tr><td class="term">Contract Hire</td><td>An agreement where a supplier provides staff services at agreed daily or hourly rates.</td></tr>
+<tr><td class="term">Cookie</td><td>A file placed on a hard drive by a web server to track visits and personalize services.</td></tr>
+<tr><td class="term">Copyright</td><td>The right to copy a work; protects original literary, dramatic, musical, or artistic works (including software).</td></tr>
+<tr><td class="term">Cost Plus (Time and Materials)</td><td>A contract where final payment is based on actual costs incurred plus labor charges.</td></tr>
+<tr><td class="term">Criminal Law</td><td>Part of the law characterizing certain wrongdoings as offences against the State.</td></tr>
+<tr><td class="term">Cyber Squatting</td><td>Registering trademarks as domain names to sell them to the rightful owners for profit.</td></tr>
+<tr><td class="term">Data Mining</td><td>The process of analyzing data to discover patterns, often involving the secondary use of information.</td></tr>
+<tr><td class="term">Data Protection</td><td>Legal framework to protect individuals from inaccurate, unauthorized, or irrelevant use of their personal information.</td></tr>
+<tr><td class="term">Design Registration</td><td>Protects the artistic aspect (texture, pattern, shape) of an object for up to 30 years in Pakistan.</td></tr>
+<tr><td class="term">Domain Name System (DNS)</td><td>A system that identifies businesses and connects computers on the internet with universal resolvability.</td></tr>
+<tr><td class="term">Electronic Trail</td><td>The record of information left behind by digital activities (purchases, GPS, browsing).</td></tr>
+<tr><td class="term">Executive</td><td>The element of the State responsible for implementing laws.</td></tr>
+<tr><td class="term">Fair Use</td><td>A doctrine allowing limited use of copyrighted material without permission for purposes like education, research, or journalism.</td></tr>
+<tr><td class="term">Flash Cookie</td><td>A file placed by Adobe Flash Player that holds more data than a browser cookie and can recreate deleted cookies.</td></tr>
+<tr><td class="term">Freedom of Information</td><td>Legislation providing public rights of access to information held by public sector bodies.</td></tr>
+<tr><td class="term">Geographical Indication (GI)</td><td>An indication identifying a good as originating in a specific territory where its quality or reputation is attributable to that origin (e.g., Lahori Fish).</td></tr>
+<tr><td class="term">ICANN</td><td>Internet Corporation for Assigned Names and Numbers; manages domain name systems globally.</td></tr>
+<tr><td class="term">Indemnity</td><td>A contractual promise to compensate for loss or damage.</td></tr>
+<tr><td class="term">Industrial Design Rights</td><td>Protection for the artistic appearance of an object rather than its technical features.</td></tr>
+<tr><td class="term">Intangible Property</td><td>Property that cannot be touched or defined by physical parameters (e.g., an invention or formula).</td></tr>
+<tr><td class="term">Intellectual Property (IP)</td><td>Creations of the human intellect; the &ldquo;currency of the future economy.&rdquo;</td></tr>
+<tr><td class="term">Judiciary</td><td>The element of the State that interprets laws and makes pronouncements in disputes.</td></tr>
+<tr><td class="term">Jurisdiction</td><td>The area covered by a single legal system; the legal authority to administer justice.</td></tr>
+<tr><td class="term">Law of Contract</td><td>Branch of law determining whether a promise is legally enforceable.</td></tr>
+<tr><td class="term">Law of Property</td><td>Law determining rights people enjoy over land and other property (including IP).</td></tr>
+<tr><td class="term">Law of Succession</td><td>Law determining the devolution of property upon the death of the owner.</td></tr>
+<tr><td class="term">Law of Torts</td><td>Civil wrongs (e.g., negligence, trespass) for which the remedy is unspecified damages.</td></tr>
+<tr><td class="term">Legislature (Parliament)</td><td>The element of the State responsible for making new laws.</td></tr>
+<tr><td class="term">Litigation</td><td>Court action under civil law initiated by one of the parties in a dispute.</td></tr>
+<tr><td class="term">Microtargeting</td><td>Direct marketing based on data mining to target specific individuals (common in political campaigns).</td></tr>
+<tr><td class="term">Non-Disclosure Agreement (NDA)</td><td>A contract specifically intended to set up obligations of confidence.</td></tr>
+<tr><td class="term">Offer</td><td>An expression of intention to create a binding agreement.</td></tr>
+<tr><td class="term">Opt-in</td><td>A policy where consumers must give explicit permission before data is shared.</td></tr>
+<tr><td class="term">Opt-out</td><td>A policy where data is shared until the consumer explicitly forbids it.</td></tr>
+<tr><td class="term">Original Jurisdiction</td><td>The authority of a court to hear a case in the first instance.</td></tr>
+<tr><td class="term">Outsourcing</td><td>Contracting out business processes (facilities management) to a supplier.</td></tr>
+<tr><td class="term">Patent</td><td>A temporary 20-year monopoly granted by the state for a novel, useful, and non-obvious invention.</td></tr>
+<tr><td class="term">Pecuniary Jurisdiction</td><td>Financial limitations on a court&rsquo;s ability to hear a case.</td></tr>
+<tr><td class="term">Procedural Law</td><td>Rules governing the manner in which rights are enforced or crimes are prosecuted.</td></tr>
+<tr><td class="term">Public Domain</td><td>Works whose IP rights have expired or been forfeited, available for use by anyone.</td></tr>
+<tr><td class="term">Public International Law</td><td>Rules governing relationships between states (e.g., rules of war, boundaries).</td></tr>
+<tr><td class="term">Public Record</td><td>Information about an incident reported to a government agency for the purpose of informing the public.</td></tr>
+<tr><td class="term">RFID (Radio Frequency ID)</td><td>Tiny wireless transmitters used for inventory and tracking; a potential tracking device if not disabled.</td></tr>
+<tr><td class="term">Secondary Use</td><td>Using information collected for one purpose for a different, unintended purpose.</td></tr>
+<tr><td class="term">Social Network Analysis</td><td>Data mining that incorporates information from social networks to predict behaviors (e.g., party locations, loan risks).</td></tr>
+<tr><td class="term">Software Code Escrow</td><td>A service that holds source code in case a developer goes bankrupt, ensuring the client can maintain the software.</td></tr>
+<tr><td class="term">Statute Law</td><td>Law laid down by Acts of Parliament; also known as legislation.</td></tr>
+<tr><td class="term">Substantive Law</td><td>The body of rules regulating rights, duties, and liabilities among citizens and government.</td></tr>
+<tr><td class="term">Tangible Property</td><td>Physical property that can be touched and is protected by laws relating to theft and damage.</td></tr>
+<tr><td class="term">Territorial Jurisdiction</td><td>The geographical area over which a court or body has authority.</td></tr>
+<tr><td class="term">Tort</td><td>A civil wrong (not a breach of contract) resulting in legal liability for damages.</td></tr>
+<tr><td class="term">Trade Dress</td><td>The total image and overall appearance of a product protected under trademark.</td></tr>
+<tr><td class="term">Trade Mark</td><td>A word, name, or logo used to identify and distinguish the source of goods or services.</td></tr>
+<tr><td class="term">Trade Secret</td><td>Formulae, patterns, or compilations of information kept secret for commercial value.</td></tr>
+<tr><td class="term">TRIPS Agreement</td><td>Trade-Related Aspects of Intellectual Property Rights; an international WTO agreement setting IP standards.</td></tr>
+<tr><td class="term">UNDRP</td><td>Uniform Domain Name Dispute Resolution Policy; ICANN policy against cyber squatting.</td></tr>
+<tr><td class="term">Unliquidated Damages</td><td>Damages that are not pre-specified and must be determined by a court.</td></tr>
+<tr><td class="term">Warranty</td><td>A contractual promise; can be express or implied (e.g., merchantability).</td></tr>
+</tbody>
+</table>
+</div>
+
+</div><!-- end essays -->
+
+</div><!-- end main -->
+
+<script>
+// ==================== MCQ DATA ====================
+const mcqData = [
+{id:1,q:"In the case of eBay v. Bidder's Edge, which legal concept was centrally applied regarding unauthorized data crawling?",options:["A. Trademark dilution","B. Trespass to chattels","C. Unjust enrichment","D. Misappropriation"],correct:1},
+{id:2,q:"How is \"Law\" defined within the context of a state?",options:["A. A set of ethical suggestions for professional conduct","B. A body of rules that can be enforced in a court of law","C. International guidelines for human behavior","D. Voluntarily adopted protocols for societal regulation"],correct:1},
+{id:3,q:"Which term refers to the specific geographical area or subject matter over which a single legal system and set of laws have authority?",options:["A. Legislation","B. Precedent","C. Jurisdiction","D. Executive power"],correct:2},
+{id:4,q:"What is the primary psychological purpose of laws according to the provided materials?",options:["A. To encourage academic excellence","B. To provide a sense of security and scare individuals into being \"good\"","C. To replace the need for formal education","D. To eliminate the need for a judicial system"],correct:1},
+{id:5,q:"Which branch of law characterizes certain wrongdoings as offenses against the State?",options:["A. Civil Law","B. Private Law","C. Criminal Law","D. Law of Succession"],correct:2},
+{id:6,q:"A \"Tort\" is defined as a civil wrong where the remedy is a common law action for:",options:["A. Mandatory imprisonment","B. Unliquidated damages","C. Specific performance of a contract","D. State-issued fines only"],correct:1},
+{id:7,q:"Which specific type of law determines the rules regulating the structure and relationships between principal organs of government, such as Federal and Provincial authorities?",options:["A. Administrative Law","B. Constitutional Law","C. Procedural Law","D. Substantive Law"],correct:1},
+{id:8,q:"What is the difference between Substantive Law and Procedural Law?",options:["A. Substantive law defines rights and duties; Procedural law governs the steps to enforce them.","B. Substantive law is for criminal cases; Procedural law is for civil cases.","C. Substantive law is international; Procedural law is domestic.","D. There is no difference; they are interchangeable terms."],correct:0},
+{id:9,q:"In a federal state, which body is responsible for making new laws through representatives?",options:["A. The Judiciary","B. The Executive","C. The Legislature (Parliament)","D. The Police"],correct:2},
+{id:10,q:"What type of jurisdiction is exercised when a court hears a case for the first time?",options:["A. Appellate Jurisdiction","B. Pecuniary Jurisdiction","C. Original Jurisdiction","D. Territorial Jurisdiction"],correct:2},
+{id:11,q:"Between \"General Law\" and \"Special Law,\" which one prevails in a legal conflict?",options:["A. General Law","B. Special Law","C. Neither; they must be merged","D. The one decided by the Executive branch"],correct:1},
+{id:12,q:"\"Common Law\" is primarily based on:",options:["A. Acts of Parliament","B. Written statutes","C. Previous judgments of judges (Precedents)","D. International treaties only"],correct:2},
+{id:13,q:"In the \"Law and Ethics\" quadrants, how is \"Copying copyrighted software for a backup when prohibited by the agreement\" categorized?",options:["A. Quadrant I: Ethical and Legal","B. Quadrant II: Ethical but Not Legal","C. Quadrant III: Unethical but Legal","D. Quadrant IV: Not Ethical and Not Legal"],correct:1},
+{id:14,q:"In the \"Law and Ethics\" quadrants, \"Planting viruses in someone else's computer\" is categorized as:",options:["A. Ethical but not legal","B. Unethical but legal","C. Not ethical and not legal","D. Ethical and legal"],correct:2},
+{id:15,q:"What is the primary difference between Tangible and Intangible property?",options:["A. Tangible property cannot be stolen; intangible property can.","B. Tangible property can be physically touched; intangible property is a product of the human intellect.","C. Intangible property is protected by theft laws; tangible property is protected by IP laws.","D. Tangible property has no value; intangible property is the \"currency of the future.\""],correct:1},
+{id:16,q:"Intellectual Property (IP) Rights should be viewed as:",options:["A. A single, indivisible law","B. A package of different rights used to protect various aspects of a product","C. Rules that only apply to printed books","D. A voluntary system with no legal enforcement"],correct:1},
+{id:17,q:"Which type of IP protection is automatic once an original work is created in a fixed medium?",options:["A. Patent","B. Trademark","C. Copyright","D. Industrial Design"],correct:2},
+{id:18,q:"In Copyright law, what is the \"key\" requirement for a work to qualify for protection?",options:["A. Usefulness","B. Commercial value","C. Originality","D. Registration with the state"],correct:2},
+{id:19,q:"What is the standard duration of Copyright protection?",options:["A. 20 years from creation","B. 50 years from creation","C. Life of the author plus 50 years","D. Indefinite, as long as it is used"],correct:2},
+{id:20,q:"Which of the following is NOT one of the five principal rights of a copyright owner?",options:["A. Right to reproduce the work","B. Right to distribute copies","C. Right to a monopoly on the underlying idea","D. Right to perform the work in public"],correct:2},
+{id:21,q:"\"Fair Use\" allows copyrighted material to be used without permission primarily for:",options:["A. Commercial software redistribution","B. Journalism, education, and research","C. Creating a competing product","D. Any purpose as long as it is on the internet"],correct:1},
+{id:22,q:"Under the TRIPS Agreement, computer programs must be protected as:",options:["A. Patents","B. Literary works","C. Trade secrets","D. Industrial designs"],correct:1},
+{id:23,q:"Which IP right requires an invention to be \"novel, useful, and non-obvious\"?",options:["A. Copyright","B. Trademark","C. Patent","D. Confidential Information"],correct:2},
+{id:24,q:"What is the duration of a Patent in Pakistan?",options:["A. 10 years","B. 20 years","C. 30 years","D. 50 years"],correct:1},
+{id:25,q:"Which of the following is UN-patentable in Pakistan?",options:["A. A new chemical process","B. A mechanical invention","C. Computer Programs (Software)","D. Industrial machinery"],correct:2},
+{id:26,q:"A Trademark protects:",options:["A. The functional technical features of an invention","B. Words, names, or symbols that distinguish the source of goods","C. The source code of a software package","D. Scientific and mathematical formulae"],correct:1},
+{id:27,q:"Which trademark symbol is used for a mark that has been officially registered?",options:["A. \u2122","B. SM","C. \u00A9","D. \u00AE"],correct:3},
+{id:28,q:"What is \"Cyber Squatting\"?",options:["A. Using a computer without a license","B. Registering trademarks of other companies as domain names to sell them for profit","C. Downloading software illegally","D. Failing to renew a domain name"],correct:1},
+{id:29,q:"Which IP right protects the artistic aspect (texture, pattern, shape) of an object rather than its technical features?",options:["A. Patent","B. Industrial Design Rights","C. Trade Secret","D. Geographical Indication"],correct:1},
+{id:30,q:"What is a \"Geographical Indication\"?",options:["A. A GPS coordinate for a business","B. An indication identifying goods as originating in a specific territory where quality is attributable to that origin","C. A trademark for a local map","D. The address of a patent office"],correct:1},
+{id:31,q:"Which of the following is a condition for an action on account of breach of confidential information?",options:["A. The information must be registered with the government.","B. The information must have been disclosed in circumstances giving rise to an obligation of confidence.","C. The information must be at least 20 years old.","D. The disclosure must be in the public interest."],correct:1},
+{id:32,q:"What is the \"Public Interest\" exception in confidentiality?",options:["A. Confidentiality is void if the information is boring.","B. A court may rule that info must be disclosed if it reveals illegal price fixing or environmental damage.","C. All confidential info must be shared with the public after 5 years.","D. Public interest does not exist in legal terms."],correct:1},
+{id:33,q:"Data Protection Principles state that personal data should be:",options:["A. Kept forever for historical purposes","B. Processed fairly, lawfully, and with consent","C. Shared with any third party that requests it","D. Collected without specifying a purpose"],correct:1},
+{id:34,q:"What does the \"zone of inaccessibility\" refer to?",options:["A. A high-security server room","B. Privacy","C. A patent that has expired","D. The deep web"],correct:1},
+{id:35,q:"Which technology allows manufacturers to replace barcodes and potentially track items wirelessly?",options:["A. Cookies","B. RFID Tags","C. Flash Cookies","D. OnStar"],correct:1},
+{id:36,q:"\"Flash Cookies\" are distinct from regular browser cookies because they:",options:["A. Are deleted automatically when the browser closes","B. Can hold 25 times more information and are not controlled by browser privacy settings","C. Only work on mobile devices","D. Are used only for displaying images"],correct:1},
+{id:37,q:"What is \"Data Mining\"?",options:["A. Deleting old data to save space","B. Searching for precious metals using computers","C. Analyzing information to identify patterns and relationships","D. Encrypting data for security"],correct:2},
+{id:38,q:"In data mining, \"Secondary Use\" refers to:",options:["A. Using data for a second time for the same purpose","B. Information collected for one purpose being used for another purpose","C. Backing up data on a second drive","D. Selling data to a second-hand shop"],correct:1},
+{id:39,q:"Under \"Collaborative Filtering,\" how do websites predict user preferences?",options:["A. By asking the user's family","B. By analyzing the preferences of a large number of people","C. By randomly guessing","D. By looking at the user's hardware specifications"],correct:1},
+{id:40,q:"What is the difference between \"Opt-in\" and \"Opt-out\" policies?",options:["A. Opt-in means the user must give permission; Opt-out means info is shared until the user forbids it.","B. Opt-in is for criminal law; Opt-out is for civil law.","C. Opt-in is only for cookies; Opt-out is for patents.","D. There is no difference."],correct:0},
+{id:41,q:"The \"Netflix Prize\" case study illustrated that:",options:["A. Data can be truly anonymous if grades are removed.","B. Ratings are not truly anonymous if external information is available to \"de-anonymize\" individuals.","C. $1 million is not enough for an algorithm.","D. Users do not care about movie privacy."],correct:1},
+{id:42,q:"A \"Contract\" is an agreement between two or more parties that is:",options:["A. Recommended by the state","B. Enforceable in a court of law","C. Always written on paper","D. Not bound by legal consequences"],correct:1},
+{id:43,q:"Which of the following is a mandatory element of a contract?",options:["A. A witness from the government","B. A seal of approval from a judge","C. Consideration (each party receives and provides something)","D. A duration of at least five years"],correct:2},
+{id:44,q:"What is the \"Mirror Image Rule\" in contracts?",options:["A. The contract must be printed on glossy paper.","B. The acceptance must exactly match the offer.","C. Both parties must be the same age.","D. The contract must be signed in front of a mirror."],correct:1},
+{id:45,q:"Which type of warranty ensures that goods \"reasonably conform to an ordinary buyer's expectations\"?",options:["A. Express Warranty","B. Implied Warranty of Merchantability","C. Implied Warranty of Fitness for a Particular Purpose","D. Disclaimer of Warranty"],correct:1},
+{id:46,q:"\"Bespoke\" software refers to:",options:["A. Mass-market software like Windows","B. Free open-source software","C. Tailor-made systems developed for a specific client","D. Software that has expired"],correct:2},
+{id:47,q:"In a \"Cost Plus\" or \"Time and Materials\" contract:",options:["A. The price is fixed regardless of labor hours.","B. The client pays for actual costs incurred plus labor charges.","C. The supplier provides the software for free but charges for the computer.","D. The contract cannot be terminated."],correct:1},
+{id:48,q:"What is the purpose of a \"Software Code Escrow Service\"?",options:["A. To hide the source code from the government","B. To hold source code in trust so a client can access it if the developer goes bankrupt","C. To distribute source code to the public domain","D. To encrypt binaries for safe shipping"],correct:1},
+{id:49,q:"Which contract type involves a supplier providing the services of staff at agreed daily or hourly rates?",options:["A. Fixed Price Contract","B. Bespoke Contract","C. Contract Hire","D. License Agreement"],correct:2},
+{id:50,q:"Why did the Ministry of Information v. Faujisoft project fail?",options:["A. The budget was too high.","B. The software was bug-free but too slow.","C. There were no formal requirements, and the contract didn't protect the buyer from bugs.","D. The bank guarantee was for 50 years."],correct:2}
+];
+
+// ==================== STATE ====================
+let state = JSON.parse(localStorage.getItem('pic-study-state') || 'null') || {
+  answers: {},  // {mcqId: {selected, correct}}
+  order: mcqData.map((_,i) => i),
+  theme: 'light'
+};
+
+function saveState() { localStorage.setItem('pic-study-state', JSON.stringify(state)); }
+
+// ==================== THEME ====================
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme-icon').textContent = t === 'dark' ? '\u2600' : '\u263E';
+  document.getElementById('theme-label').textContent = t === 'dark' ? 'Light' : 'Dark';
+  state.theme = t;
+  saveState();
+}
+function toggleTheme() { applyTheme(state.theme === 'dark' ? 'light' : 'dark'); }
+applyTheme(state.theme);
+
+// ==================== TABS ====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ==================== MCQ RENDERING ====================
+function renderMCQs() {
+  const container = document.getElementById('mcq-container');
+  container.innerHTML = '';
+  state.order.forEach((idx, displayIdx) => {
+    const mcq = mcqData[idx];
+    const answered = state.answers[mcq.id];
+    const card = document.createElement('div');
+    card.className = 'mcq-card' + (answered ? (answered.correct ? ' answered-correct' : ' answered-incorrect') : '');
+    card.id = 'mcq-' + mcq.id;
+
+    let optionsHtml = '';
+    mcq.options.forEach((opt, oi) => {
+      let cls = 'mcq-option';
+      if (answered) {
+        cls += ' disabled';
+        if (oi === answered.selected && answered.correct) cls += ' selected-correct';
+        else if (oi === answered.selected && !answered.correct) cls += ' selected-incorrect';
+        if (oi === mcq.correct && !answered.correct) cls += ' show-correct';
+      }
+      optionsHtml += `<div class="${cls}" data-mcq="${mcq.id}" data-opt="${oi}">${opt}</div>`;
+    });
+
+    card.innerHTML = `<div class="mcq-num">Question ${mcq.id} of 50</div>
+      <div class="mcq-question">${mcq.q}</div>
+      <div class="mcq-options">${optionsHtml}</div>`;
+    container.appendChild(card);
+  });
+
+  container.querySelectorAll('.mcq-option:not(.disabled)').forEach(el => {
+    el.addEventListener('click', () => handleAnswer(parseInt(el.dataset.mcq), parseInt(el.dataset.opt)));
+  });
+
+  updateScore();
+}
+
+function handleAnswer(mcqId, selected) {
+  const mcq = mcqData.find(m => m.id === mcqId);
+  const correct = selected === mcq.correct;
+  state.answers[mcqId] = { selected, correct };
+  saveState();
+  renderMCQs();
+}
+
+function updateScore() {
+  const vals = Object.values(state.answers);
+  const c = vals.filter(v => v.correct).length;
+  const ic = vals.filter(v => !v.correct).length;
+  const r = 50 - c - ic;
+  document.getElementById('score-correct').textContent = c;
+  document.getElementById('score-incorrect').textContent = ic;
+  document.getElementById('score-remaining').textContent = r;
+  document.getElementById('progress-fill').style.width = ((c + ic) / 50 * 100) + '%';
+}
+
+function shuffleMCQs() {
+  for (let i = state.order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
+  }
+  saveState();
+  renderMCQs();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetMCQs() {
+  state.answers = {};
+  state.order = mcqData.map((_, i) => i);
+  saveState();
+  renderMCQs();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+renderMCQs();
+
+// ==================== COLLAPSIBLES ====================
+function toggleCollapsible(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+// ==================== GLOSSARY SEARCH ====================
+function filterGlossary() {
+  const q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('#glossary-table tbody tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.classList.toggle('glossary-hidden', q && !text.includes(q));
+  });
+}
+</script>
+
+</body>
+</html>
